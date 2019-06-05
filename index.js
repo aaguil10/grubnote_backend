@@ -3,10 +3,6 @@ const admin = require('firebase-admin');
 const express = require('express');
 const cors = require('cors');
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -34,7 +30,7 @@ app.post('/insert', (req, res) => {
 	};
 
 
-	var setDoc = db.collection('recipes').doc(obj.id).set(data);
+	var setDoc = db.collection('recipes').add(data);
 
   	res.send(data);  
 });
@@ -46,7 +42,9 @@ app.get('/getrecipes', function (req, res) {
 	collectionGroup.get().then(
 		function(collectionSnapshot) {
   		collectionSnapshot.forEach(function(doc) {
-	   		recipes.push(doc.data())
+  			const d = doc.data();
+  			d.id = doc.id;
+	   		recipes.push(d);
   		});
   		res.send(recipes);
    		return true;
