@@ -13,10 +13,6 @@ app.post("/insert", (req, res) => {
   //var obj = JSON.parse(req.body);
   var obj = req.body;
 
-  console.log(req);
-  console.log(req.body);
-  console.log(req.body.title);
-
   let data = {
     title: obj.title,
     subtitle: obj.subtitle,
@@ -25,7 +21,7 @@ app.post("/insert", (req, res) => {
     notes: obj.notes
   };
 
-  var setDoc;
+  var setDoc = "";
   if (obj.id.includes("new")) {
     setDoc = db.collection("recipes").add(data);
   } else {
