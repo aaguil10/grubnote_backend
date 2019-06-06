@@ -25,9 +25,17 @@ app.post("/insert", (req, res) => {
     notes: obj.notes
   };
 
-  var setDoc = db.collection("recipes").add(data);
+  var setDoc;
+  if (obj.id.includes("new")) {
+    setDoc = db.collection("recipes").add(data);
+  } else {
+    setDoc = db
+      .collection("recipes")
+      .doc(obj.id)
+      .set(data);
+  }
 
-  res.send(data);
+  res.send(setDoc);
 });
 
 app.get("/getrecipes", (req, res) => {
