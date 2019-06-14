@@ -14,7 +14,8 @@ const recipe_function = db => {
       subtitle: obj.subtitle,
       ingredients: obj.ingredients,
       steps: obj.steps,
-      notes: obj.notes
+      notes: obj.notes,
+      created_by: obj.created_by
     };
 
     var setDoc = "";
@@ -30,9 +31,14 @@ const recipe_function = db => {
     res.send(setDoc);
   });
 
-  app.get("/getrecipes", (req, res) => {
+  app.post("/getrecipes", (req, res) => {
+    var obj = req.body;
+    console.log(obj);
+    console.log(obj.user_id);
     const recipes = [];
-    let collectionGroup = db.collectionGroup("recipes");
+    let collectionGroup = db
+      .collection("recipes")
+      .where("created_by", "==", obj.user_id);
     collectionGroup
       .get()
       .then(collectionSnapshot => {

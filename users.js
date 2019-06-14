@@ -30,7 +30,9 @@ const users_function = db => {
                 .where("subs", "array-contains", obj.sub)
                 .get()
                 .then(snapshot => {
-                  res.send(snapshot.docs[0].data());
+                  const user_obj = snapshot.docs[0].data();
+                  user_obj.id = snapshot.docs[0].id;
+                  res.send(user_obj);
                   return true;
                 })
                 .catch(error => {
@@ -44,7 +46,9 @@ const users_function = db => {
             });
           return false;
         } else {
-          res.send(querySnapshot.docs[0].data());
+          const user_obj = querySnapshot.docs[0].data();
+          user_obj.id = querySnapshot.docs[0].id;
+          res.send(user_obj);
           return false;
         }
       })
