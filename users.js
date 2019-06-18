@@ -2,12 +2,10 @@ const express = require("express");
 const cors = require("cors");
 
 const users_function = db => {
-  console.log("Called users_function");
   const users = express();
   users.use(cors({ origin: true }));
 
   users.post("/getUser", (req, res) => {
-    console.log("getUser");
     //var obj = JSON.parse(req.body);
     var obj = req.body;
     console.log(obj);
@@ -58,7 +56,6 @@ const users_function = db => {
   });
 
   let addUser = obj => {
-    console.log("addUser");
     let data = {
       first_name: obj.given_name,
       last_name: obj.family_name,
