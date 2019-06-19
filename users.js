@@ -6,10 +6,7 @@ const users_function = db => {
   users.use(cors({ origin: true }));
 
   users.post("/getUser", (req, res) => {
-    //var obj = JSON.parse(req.body);
     var obj = req.body;
-    console.log(obj);
-    console.log(obj.sub);
 
     let subQuery = db
       .collection("users")
@@ -56,22 +53,39 @@ const users_function = db => {
   });
 
   let addUser = obj => {
-    let data = {
-      first_name: obj.given_name,
-      last_name: obj.family_name,
-      user_name: obj.nickname,
-      email: obj.email,
-      picture: obj.picture,
-      subs: [obj.sub]
-    };
+    let data = parseObj(obj);
     return db.collection("users").add(data);
   };
+
+  function parseObj(obj) {
+    let data = null;
+    let provider = obj.sub.split("|")[0];
+    if (provider === "google-oauth2" || provider === "facebook") {
+      data = {
+        first_name: obj.given_name,
+        last_name: obj.family_name,
+        user_name: obj.nickname,
+        email: obj.email,
+        picture: obj.picture,
+        subs: [obj.sub]
+      };
+    }
+    if (provider === "auth0") {
+      data = {
+        first_name: obj.nickname,
+        last_name: "",
+        user_name: obj.nickname,
+        email: obj.email,
+        picture: obj.picture,
+        subs: [obj.sub]
+      };
+    }
+    return data;
+  }
 
   users.post("/addUser", (req, res) => {
     //var obj = JSON.parse(req.body);
     var obj = req.body;
-    console.log(obj);
-    console.log(obj.sub);
 
     let data = {
       first_name: obj.given_name,
