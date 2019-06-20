@@ -32,13 +32,14 @@ const recipe_function = db => {
   });
 
   app.post("/getrecipes", (req, res) => {
-    var obj = req.body;
-    console.log(obj);
-    console.log(obj.user_id);
+    let user_id = req.body.user_id;
+
+    addDevceIdToUser(req);
+
     const recipes = [];
     let collectionGroup = db
       .collection("recipes")
-      .where("created_by", "==", obj.user_id);
+      .where("created_by", "==", user_id);
     collectionGroup
       .get()
       .then(collectionSnapshot => {
@@ -55,6 +56,40 @@ const recipe_function = db => {
         res.send("Error getting document");
       });
   });
+
+  function addDevceIdToUser(req) {
+    var userRef = db.collection("users").doc(req.body.user_id);
+    userRef
+      .get()
+      .then(doc => {
+        if (doc.exists) {
+          console.log("Document data:", doc.data());
+        } else {
+          // doc.data() will be undefined in this case
+          console.log("No such document!");
+        }
+        return doc.data();
+      })
+      .then(data => {
+        let isUpToDate = new Set(data.isUpToDate);
+        let device_id = req.headers.authorization
+          .split(" ")[1]
+          .replace('"', "")
+          .replace('"', "");
+        isUpToDate.add(device_id);
+        var setWithMerge = userRef.set(
+          {
+            isUpToDate: [...isUpToDate]
+          },
+          { merge: true }
+        );
+        return setWithMerge;
+      })
+      .catch(error => {
+        console.log("Error getting document:", error);
+      });
+  }
+
   return app;
 };
 
