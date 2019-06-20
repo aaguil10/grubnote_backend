@@ -32,10 +32,41 @@ const recipe_function = db => {
   });
 
   app.post("/getrecipes", (req, res) => {
-    let user_id = req.body.user_id;
+    const user_id = req.body.user_id;
 
-    addDevceIdToUser(req);
+    const userRef = db.collection("users").doc(req.body.user_id);
+    userRef
+      .get()
+      .then(doc => {
+        return doc.data();
+      })
+      .then(data => {
+        let isUpToDate = new Set(data.isUpToDate);
+        let device_id = req.headers.authorization
+          .split(" ")[1]
+          .replace(/"/g, "");
+        if (isUpToDate.has(device_id)) {
+          console.log("Device up to date");
+          res.send("Device up to date");
+          return "Device up to date";
+        } else {
+          userRef.set(
+            {
+              isUpToDate: [...isUpToDate]
+            },
+            { merge: true }
+          );
+          return getRecipes(res, user_id);
+        }
+      })
+      .catch(error => {
+        console.log("Error occurred:", error);
+        res.send("Error occurred:" + error);
+        return "Error occurred:" + error;
+      });
+  });
 
+  function getRecipes(res, user_id) {
     const recipes = [];
     let collectionGroup = db
       .collection("recipes")
@@ -46,47 +77,17 @@ const recipe_function = db => {
         collectionSnapshot.forEach(doc => {
           const d = doc.data();
           d.id = doc.id;
+          console.log(d);
           recipes.push(d);
         });
         res.send(recipes);
-        return true;
+        return recipes;
       })
       .catch(err => {
-        console.log("Error getting document", err);
-        res.send("Error getting document");
-      });
-  });
-
-  function addDevceIdToUser(req) {
-    var userRef = db.collection("users").doc(req.body.user_id);
-    userRef
-      .get()
-      .then(doc => {
-        if (doc.exists) {
-          console.log("Document data:", doc.data());
-        } else {
-          // doc.data() will be undefined in this case
-          console.log("No such document!");
-        }
-        return doc.data();
-      })
-      .then(data => {
-        let isUpToDate = new Set(data.isUpToDate);
-        let device_id = req.headers.authorization
-          .split(" ")[1]
-          .replace('"', "")
-          .replace('"', "");
-        isUpToDate.add(device_id);
-        var setWithMerge = userRef.set(
-          {
-            isUpToDate: [...isUpToDate]
-          },
-          { merge: true }
-        );
-        return setWithMerge;
-      })
-      .catch(error => {
-        console.log("Error getting document:", error);
+        const e = "Error getting recipes:" + err;
+        console.log(e);
+        res.send(e);
+        return e;
       });
   }
 
