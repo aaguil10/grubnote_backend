@@ -6,7 +6,14 @@ const recipe_function = db => {
   app.use(cors({ origin: true }));
 
   app.post("/insert", (req, res) => {
-    //var obj = JSON.parse(req.body);
+    const userRef = db.collection("users").doc(req.body.created_by);
+    userRef.set(
+      {
+        isUpToDate: []
+      },
+      { merge: true }
+    );
+
     var obj = req.body;
 
     let data = {
