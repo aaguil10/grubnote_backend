@@ -5,59 +5,35 @@ const users_function = db => {
   const users = express();
   users.use(cors({ origin: true }));
 
-  users.post("/getUser", (req, res) => {
+  users.post("/getUser", async (req, res) => {
     var obj = req.body;
 
-    let subQuery = db
+    let querySnapshot = await db
       .collection("users")
-      .where("subs", "array-contains", obj.sub);
-    let user = subQuery
-      .get()
-      .then(querySnapshot => {
-        let search_results = [];
-        querySnapshot.forEach(doc => {
-          search_results.push(doc.data());
-        });
-        if (search_results.length === 0) {
-          addUser(obj)
-            .then(result => {
-              db.collection("users")
-                .where("subs", "array-contains", obj.sub)
-                .get()
-                .then(snapshot => {
-                  const user_obj = snapshot.docs[0].data();
-                  user_obj.id = snapshot.docs[0].id;
-                  res.send(user_obj);
-                  return true;
-                })
-                .catch(error => {
-                  res.send(error);
-                });
-              return true;
-            })
-            .catch(error => {
-              res.send(error);
-              return true;
-            });
-          return false;
-        } else {
-          const user_obj = querySnapshot.docs[0].data();
-          user_obj.id = querySnapshot.docs[0].id;
-          res.send(user_obj);
-          return false;
-        }
-      })
-      .catch(err => {
-        res.send(err);
-      });
+      .where("subs", "array-contains", obj.sub)
+      .get();
+    let search_results = [];
+    querySnapshot.forEach(doc => {
+      const user_obj = doc.data();
+      user_obj.id = doc.id;
+      search_results.push(user_obj);
+    });
+    if (search_results.length === 0) {
+      await createUser(obj);
+      const snapshot = await db
+        .collection("users")
+        .where("subs", "array-contains", obj.sub)
+        .get();
+      const user_obj = snapshot.docs[0].data();
+      user_obj.id = snapshot.docs[0].id;
+      res.send(user_obj);
+    } else {
+      res.send(search_results[0]);
+      return false;
+    }
   });
 
-  let addUser = obj => {
-    let data = parseObj(obj);
-    return db.collection("users").add(data);
-  };
-
-  function parseObj(obj) {
+  let createUser = obj => {
     let data = null;
     let provider = obj.sub.split("|")[0];
     if (provider === "google-oauth2" || provider === "facebook") {
@@ -67,6 +43,7 @@ const users_function = db => {
         user_name: obj.nickname,
         email: obj.email,
         picture: obj.picture,
+        isUpToDate: [],
         subs: [obj.sub]
       };
     }
@@ -77,11 +54,12 @@ const users_function = db => {
         user_name: obj.nickname,
         email: obj.email,
         picture: obj.picture,
+        isUpToDate: [],
         subs: [obj.sub]
       };
     }
-    return data;
-  }
+    return db.collection("users").add(data);
+  };
 
   users.post("/addUser", (req, res) => {
     //var obj = JSON.parse(req.body);

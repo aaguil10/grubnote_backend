@@ -49,6 +49,9 @@ const recipe_function = db => {
       })
       .then(data => {
         let isUpToDate = data.isUpToDate;
+        if (isUpToDate === undefined) {
+          isUpToDate = [];
+        }
         let device_id = req.headers.authorization
           .split(" ")[1]
           .replace(/"/g, "");
