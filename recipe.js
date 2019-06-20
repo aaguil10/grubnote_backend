@@ -41,18 +41,18 @@ const recipe_function = db => {
         return doc.data();
       })
       .then(data => {
-        let isUpToDate = new Set(data.isUpToDate);
+        let isUpToDate = data.isUpToDate;
         let device_id = req.headers.authorization
           .split(" ")[1]
           .replace(/"/g, "");
-        if (isUpToDate.has(device_id)) {
-          console.log("Device up to date");
+        if (isUpToDate.includes(device_id)) {
           res.send("Device up to date");
           return "Device up to date";
         } else {
+          isUpToDate.push(device_id);
           userRef.set(
             {
-              isUpToDate: [...isUpToDate]
+              isUpToDate: isUpToDate
             },
             { merge: true }
           );
@@ -60,7 +60,6 @@ const recipe_function = db => {
         }
       })
       .catch(error => {
-        console.log("Error occurred:", error);
         res.send("Error occurred:" + error);
         return "Error occurred:" + error;
       });
@@ -77,7 +76,6 @@ const recipe_function = db => {
         collectionSnapshot.forEach(doc => {
           const d = doc.data();
           d.id = doc.id;
-          console.log(d);
           recipes.push(d);
         });
         res.send(recipes);
@@ -85,7 +83,6 @@ const recipe_function = db => {
       })
       .catch(err => {
         const e = "Error getting recipes:" + err;
-        console.log(e);
         res.send(e);
         return e;
       });
